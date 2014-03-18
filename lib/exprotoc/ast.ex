@@ -34,7 +34,7 @@ defmodule Exprotoc.AST do
     if HashDict.has_key? ast, package do
       raise "Ambiguous name for #{package}."
     end
-    ast = HashDict.put ast, package, { [], modules }
+    HashDict.put ast, package, { [], modules }
   end
 
   def search_ast(ast, [], needle) do
