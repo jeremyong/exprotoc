@@ -6,7 +6,8 @@ defmodule TestWrapper.Mixfile do
       version: "0.0.1",
       elixir: "~> 0.12.5",
       compilers: [:exprotoc, :elixir, :app],
-      proto_files: ["priv/test.proto"],
+      proto_files: ["priv/test.proto", "priv/other.proto", "priv/another.proto"],
+      proto_path: ["priv"],
       deps: deps ]
   end
 

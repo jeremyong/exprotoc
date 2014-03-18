@@ -117,4 +117,32 @@ defmodule TestWrapperTest do
     message = Test.Test10.decode payload
     assert message[:k][:f] == 150
   end
+
+  test "incode imported message" do
+    m = Other.Msg1.new a: 150
+    message = Test.Test11.new l: m
+    assert message[:l][:a] == 150
+    payload = message |> Test.Test11.encode |> iolist_to_binary
+    assert payload == << 10, 3, 8, 150, 1 >>
+  end
+
+  test "decode imported message" do
+    payload = << 10, 3, 8, 150, 1>>
+    message = Test.Test11.decode payload
+    assert message[:l][:a] == 150
+  end
+
+  test "encode nested imported message" do
+    m = Other.Msg1.Msg3.new b: 150
+    message = Test.Test12.new m: m
+    assert message[:m][:b] == 150
+    payload = message |> Test.Test12.encode |> iolist_to_binary
+    assert payload == << 10, 3, 8, 150, 1 >>
+  end
+
+  test "decode imported message" do
+    payload = << 10, 3, 8, 150, 1>>
+    message = Test.Test12.decode payload
+    assert message[:m][:b] == 150
+  end
 end

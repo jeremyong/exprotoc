@@ -1,0 +1,10 @@
+package Other;
+
+import "another.proto";
+
+message Msg1 {
+    message Msg3 {
+        required uint32 b = 1;
+    }
+    required uint32 a = 1;
+}

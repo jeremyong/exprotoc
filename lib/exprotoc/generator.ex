@@ -1,16 +1,20 @@
 defmodule Exprotoc.Generator do
   @moduledoc "Given a structured AST, generate code files into an output dir."
 
-  def generate_code({:nopackage, modules}, dir) do
+  def generate_code({ ast, full_ast }, dir) do
     File.mkdir_p dir
-    generate_modules modules, [], HashDict.to_list(modules), dir
+    generate_modules { [], full_ast }, [], HashDict.to_list(ast), dir
   end
-  def generate_code({{ :package, package }, modules}, dir) do
+  def generate_code({ package, ast, full_ast}, dir) do
+    create_package_dir package, dir
+    { [], ast } = ast[package]
+    generate_modules { [], full_ast }, [package], HashDict.to_list(ast), dir
+  end
+
+  defp create_package_dir(package, dir) do
     package_name = to_enum_type package
     dir = dir |> Path.join(package_name)
     File.mkdir_p dir
-    ast = HashDict.put HashDict.new, package, { [], modules }
-    generate_modules { [], ast }, [package], HashDict.to_list(modules), dir
   end
 
   defp generate_modules(_, _, [], _) do end
@@ -38,7 +42,7 @@ defmodule Exprotoc.Generator do
                      fn({k, v}, acc) ->
                          enum_atom = to_enum_type k
                          """
-#{i}  def to_i({ fullname, :#{enum_atom} }), do: #{v}
+#{i}  def to_i({ #{fullname}, :#{enum_atom} }), do: #{v}
 #{i}  def to_symbol(#{v}), do: { #{fullname}, :#{enum_atom} }
 #{i}  def #{enum_atom}, do: { #{fullname}, :#{enum_atom} }
 """ <> acc
@@ -156,7 +160,6 @@ defmodule Exprotoc.Generator do
   defp indent(level), do: String.duplicate("  ", level)
 
   defp type_to_string(ast, scope, type) when is_list(type) do
-    type = Enum.reverse type
     { module, pointer } = Exprotoc.AST.search_ast ast, scope, type
     if elem(module, 0) == :enum do
       "{ :enum, " <> get_module_name(pointer) <> " }"

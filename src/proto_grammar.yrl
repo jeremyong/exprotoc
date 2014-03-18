@@ -17,7 +17,7 @@ Rootsymbol proto.
 proto -> package var ';' imports messages : { { package, value_of('$2') }, '$4', '$5'}.
 proto -> imports messages : { no_package, '$1', '$2' }.
 
-imports -> import string ';' imports : [value_of('$2') | '$4'].
+imports -> import string ';' imports : [list_to_binary(value_of('$2')) | '$4'].
 imports -> '$empty' : [].
 
 messages -> p_enum : {['$1'], []}.
@@ -47,7 +47,7 @@ field_rule -> atom : value_of('$1').
 
 field_type -> atom : value_of('$1').
 field_type -> var : value_of('$1').
-field_type -> var '.' field_type : lists:reverse(prepend(value_of('$1'), '$3')).
+field_type -> var '.' field_type : prepend(value_of('$1'), '$3').
 
 field_name -> atom : value_of('$1').
 

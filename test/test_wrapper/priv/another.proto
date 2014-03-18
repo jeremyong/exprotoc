@@ -1,0 +1,5 @@
+package Another;
+
+message Msg2 {
+    required uint32 a = 1;
+}
