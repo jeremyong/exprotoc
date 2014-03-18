@@ -1,0 +1,6 @@
+/_build
+/deps
+erl_crash.dump
+*.ez
+proto_grammar.erl
+test/test_wrapper/lib
