@@ -39,15 +39,19 @@ defmodule Exprotoc.Generator do
       name = fullname
     end
     i = indent level
-    enum_funs = List.foldl enum_values, "",
-                     fn({k, v}, acc) ->
-                         enum_atom = to_enum_type k
-                         """
-#{i}  def to_i({ #{fullname}, :#{enum_atom} }), do: #{v}
-#{i}  def to_symbol(#{v}), do: { #{fullname}, :#{enum_atom} }
-#{i}  def #{enum_atom}, do: { #{fullname}, :#{enum_atom} }
-""" <> acc
-                     end
+    { acc1, acc2, acc3 } =
+      List.foldl enum_values, { "", "", "" },
+           fn({k, v}, { a1, a2, a3 }) ->
+               enum_atom = to_enum_type k
+               a1 = a1 <>
+               "#{i}  def to_i({ #{fullname}, :#{enum_atom} }), do: #{v}\n"
+               a2 = a2 <>
+               "#{i}  def to_symbol(#{v}), do: { #{fullname}, :#{enum_atom} }\n"
+               a3 = a3 <>
+               "#{i}  def #{enum_atom}, do: { #{fullname}, :#{enum_atom} }\n"
+               { a1, a2, a3 }
+           end
+    enum_funs = acc1 <> acc2 <> acc3
     """
 #{i}defmodule #{name} do
 #{i}  def decode(value), do: to_symbol value

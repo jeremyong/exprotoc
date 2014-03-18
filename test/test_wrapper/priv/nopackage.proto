@@ -1,3 +1,8 @@
 message NoPackage {
   required uint32 a = 1;
 }
+
+enum Multi {
+  V1 = 1;
+  V2 = 2;
+}
