@@ -2,14 +2,14 @@ defmodule TestWrapper.Mixfile do
   use Mix.Project
 
   def project do
-    [ app: :tmp,
+    [ app: :test_wrapper,
       version: "0.0.1",
       elixir: "~> 0.12.5",
       compilers: [:exprotoc, :elixir, :app],
-      proto_files: ["priv/nopackage.proto",
-                    "priv/test.proto",
-                    "priv/other.proto",
-                    "priv/another.proto"],
+      proto_files: ["nopackage.proto",
+                    "test.proto",
+                    "other.proto",
+                    "another.proto"],
       proto_path: ["priv"],
       deps: deps ]
   end

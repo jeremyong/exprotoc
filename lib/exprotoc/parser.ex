@@ -2,7 +2,8 @@ defmodule Exprotoc.Parser do
   @multiline_comment "/\\*([^*]|\\*+[^*/])*\\*+/"
   @line_comment "//.*\\n"
 
-  def tokenize(file) do
+  def tokenize(file, path) do
+    file = find_file file, path
     { :ok, text } = File.read file
     { :ok, reg1 } = Regex.compile @multiline_comment
     { :ok, reg2 } = Regex.compile @line_comment
@@ -13,6 +14,22 @@ defmodule Exprotoc.Parser do
                                           { :reserved_word_fun ,
                                             &reserved_words/1 })
     tokens
+  end
+
+  def find_file(file, []) do
+    if File.exists? file do
+      file
+    else
+      raise "Could not locate #{file} in path"
+    end
+  end
+  def find_file(file, [ dir | proto_path ]) do
+    file_path = Path.join dir, file
+    if File.exists? file_path do
+      file_path
+    else
+      find_file file, proto_path
+    end
   end
 
   def parse(tokens) do

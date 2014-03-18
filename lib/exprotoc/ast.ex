@@ -18,8 +18,8 @@ defmodule Exprotoc.AST do
 
   defp generate_import_ast([], _, acc), do: acc
   defp generate_import_ast([ i | imports ], proto_path, acc) do
-    file = find_import i, proto_path
-    { package, _, { enums, messages } } = file |> tokenize |> parse
+    file = find_file i, proto_path
+    { package, _, { enums, messages } } = file |> tokenize(proto_path) |> parse
     ast = generate_symbols enums, messages, HashDict.new
     acc = merge_asts { package, ast }, acc
     generate_import_ast imports, proto_path, acc
@@ -35,22 +35,6 @@ defmodule Exprotoc.AST do
       raise "Ambiguous name for #{package}."
     end
     ast = HashDict.put ast, package, { [], modules }
-  end
-
-  def find_import(file, []) do
-    if File.exists? file do
-      file
-    else
-      raise "Could not locate #{file} in path"
-    end
-  end
-  def find_import(file, [ dir | proto_path ]) do
-    file_path = Path.join dir, file
-    if File.exists? file_path do
-      file_path
-    else
-      find_import file, proto_path
-    end
   end
 
   def search_ast(ast, [], needle) do
