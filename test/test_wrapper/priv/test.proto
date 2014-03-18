@@ -4,52 +4,57 @@ import "other.proto";
 import "another.proto";
 
 message Test1 {
-    required uint32 a = 1;
+  required uint32 a = 1;
 }
 
 message Test2 {
-    enum Foo {
-        Bar = 150;
-    }
-    required Foo b = 1;
+  enum Foo {
+    Bar = 150;
+  }
+  required Foo b = 1;
 }
 
 message Test3 {
-    required Test1 c = 3;
+  required Test1 c = 3;
 }
 
 message Test4 {
-    repeated uint32 d = 1;
+  repeated uint32 d = 1;
 }
 
 message Test5 {
-    repeated Test6 e = 1;
-    message Test6 {
-        required uint32 f = 1;
-    }
+  repeated Test6 e = 1;
+  message Test6 {
+    required uint32 f = 1;
+  }
 }
 
 message Test7 {
-    optional bool g = 1 [default = true];
+  optional bool g = 1 [default = true];
 }
 
 message Test8 {
-    required uint32 h = 1;
-    required uint32 i = 2;
+  required uint32 h = 1;
+  required uint32 i = 2;
 }
 
 message Test9 {
-    required Test2.Foo j = 1;
+  required Test2.Foo j = 1;
 }
 
 message Test10 {
-    required Test5.Test6 k = 1;
+  required Test5.Test6 k = 1;
 }
 
 message Test11 {
-    required Other.Msg1 l = 1;
+  required Other.Msg1 l = 1;
 }
 
 message Test12 {
-    required Other.Msg1.Msg3 m = 1;
+  required Other.Msg1.Msg3 m = 1;
+}
+
+message Test13 {
+  optional uint32 n = 1 [default = 150];
+  optional uint32 o = 2 [default = 300];
 }

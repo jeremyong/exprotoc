@@ -154,4 +154,24 @@ defmodule TestWrapperTest do
     message = NoPackage.decode payload
     assert message[:a] == 150
   end
+
+  test "access field with default" do
+    message = Test.Test7.new
+    assert message[:g] == true
+  end
+
+  test "encode field with defaults" do
+    message = Test.Test13.new
+    assert message[:n] == 150
+    assert message[:o] == 300
+    payload = message |> Test.Test13.encode |> iolist_to_binary
+    assert payload == << 8, 150, 1, 16, 172, 2 >>
+  end
+
+  test "decode field with defaults" do
+    payload = <<>>
+    message = Test.Test13.decode payload
+    assert message[:n] == 150
+    assert message[:o] == 300
+  end
 end

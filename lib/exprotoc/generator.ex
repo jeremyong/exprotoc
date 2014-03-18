@@ -74,8 +74,18 @@ defmodule Exprotoc.Generator do
 #{i}defmodule #{name} do
 #{i}  defrecord T, message: HashDict.new
 #{i}  def encode(msg) do
-#{i}    p = Enum.map msg.message, fn({ k, v }) ->
-#{i}          { k, { get_type(k), v } }
+#{i}    p = List.foldl get_keys, [], fn(key, acc) ->
+#{i}          fnum = get_fnum key
+#{i}          type = get_type fnum
+#{i}          value = msg.message[fnum]
+#{i}          if value == nil do
+#{i}            value = get_default fnum
+#{i}          end
+#{i}          if value == nil do
+#{i}            acc
+#{i}          else
+#{i}            [ { fnum, { type, value } } | acc ]
+#{i}          end
 #{i}        end
 #{i}    Exprotoc.Protocol.encode_message p
 #{i}  end
@@ -96,10 +106,18 @@ defmodule Exprotoc.Generator do
 #{i}  def get(msg, key) do
 #{i}    f_num = get_fnum key
 #{i}    m = msg.message
-#{i}    if get_ftype(f_num) == :repeated do
-#{i}      elem m[f_num], 1
+#{i}    if HashDict.has_key?(m, f_num) do
+#{i}      if get_ftype(f_num) == :repeated do
+#{i}        elem m[f_num], 1
+#{i}      else
+#{i}        m[f_num]
+#{i}      end
 #{i}    else
-#{i}      m[f_num]
+#{i}      if get_ftype(f_num) == :repeated do
+#{i}        []
+#{i}      else
+#{i}        get_default f_num
+#{i}      end
 #{i}    end
 #{i}  end
 #{i}  def put(msg, key, value) do
@@ -131,16 +149,26 @@ defmodule Exprotoc.Generator do
     process_fields ast, scope, fields, level
   end
   defp process_fields(ast, scope, fields, level) do
-    acc = { "", "", "", "" }
-    { acc1, acc2, acc3, acc4 } =
+    i = indent level + 1
+    acc = { "", "", "", "", "", [] }
+    { acc1, acc2, acc3, acc4, acc5, acc6 } =
       List.foldl fields, acc,
-           &process_field(ast, scope, &1, &2, level)
-    acc1 <> acc2 <> acc3 <> acc4
+           &process_field(ast, scope, &1, &2, i)
+    acc5 = acc5 <> "#{i}def get_default(_), do: nil\n"
+    key_string = generate_keystring acc6, i
+    acc1 <> acc2 <> acc3 <> acc4 <> acc5 <> key_string
+  end
+
+  defp generate_keystring(keys, i) do
+    keys = Enum.map keys, fn(key) -> ":" <> atom_to_binary(key) end
+    center = Enum.join keys, ", "
+    """
+#{i}def get_keys, do: [ #{center} ]
+"""
   end
 
   defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts },
-                     { acc1, acc2, acc3, acc4 } , level) do
-    i = indent level + 1
+                     { acc1, acc2, acc3, acc4, acc5, acc6 } , i) do
     type = type_to_string ast, scope, type
     if ftype == :repeated do
       acc1 = acc1 <> """
@@ -158,7 +186,10 @@ defmodule Exprotoc.Generator do
     acc2 = acc2 <> "#{i}def get_fnum(:#{name}), do: #{fnum}\n"
     acc3 = acc3 <> "#{i}def get_ftype(#{fnum}), do: :#{ftype}\n"
     acc4 = acc4 <> "#{i}def get_type(#{fnum}), do: #{type}\n"
-    { acc1, acc2, acc3, acc4 }
+    if opts[:default] != nil do
+      acc5 = acc5 <> "#{i}def get_default(#{fnum}), do: #{opts[:default]}\n"
+    end
+    { acc1, acc2, acc3, acc4, acc5, [ name | acc6 ] }
   end
 
   defp indent(level), do: String.duplicate("  ", level)
