@@ -6,7 +6,7 @@ defmodule Exprotoc.Generator do
     generate_modules { [], full_ast }, [], HashDict.to_list(ast), dir
   end
   def generate_code({ package, ast, full_ast}, dir) do
-    create_package_dir package, dir
+    dir = create_package_dir package, dir
     { [], ast } = ast[package]
     generate_modules { [], full_ast }, [package], HashDict.to_list(ast), dir
   end
@@ -15,6 +15,7 @@ defmodule Exprotoc.Generator do
     package_name = to_enum_type package
     dir = dir |> Path.join(package_name)
     File.mkdir_p dir
+    dir
   end
 
   defp generate_modules(_, _, [], _) do end
@@ -130,31 +131,34 @@ defmodule Exprotoc.Generator do
     process_fields ast, scope, fields, level
   end
   defp process_fields(ast, scope, fields, level) do
-    List.foldl fields, "", &process_field(ast, scope, &1, &2, level)
+    acc = { "", "", "", "" }
+    { acc1, acc2, acc3, acc4 } =
+      List.foldl fields, acc,
+           &process_field(ast, scope, &1, &2, level)
+    acc1 <> acc2 <> acc3 <> acc4
   end
 
-  defp process_field(ast, scope, { :field, ftype, type, name, fnum , opts },
-                     acc, level) do
+  defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts },
+                     { acc1, acc2, acc3, acc4 } , level) do
     i = indent level + 1
     type = type_to_string ast, scope, type
     if ftype == :repeated do
-      put = """
+      acc1 = acc1 <> """
 #{i}defp put_key(msg, #{fnum}, values) when is_list(values) do
 #{i}  HashDict.put msg, #{fnum}, { :repeated, values }
 #{i}end
 """
     else
-      put = """
+      acc1 = acc1 <> """
 #{i}defp put_key(msg, #{fnum}, value) do
 #{i}  HashDict.put msg, #{fnum}, value
 #{i}end
 """
     end
-           acc <> """
-#{i}def get_fnum(:#{name}), do: #{fnum}
-#{i}def get_ftype(#{fnum}), do: :#{ftype}
-#{i}def get_type(#{fnum}), do: #{type}
-""" <> put
+    acc2 = acc2 <> "#{i}def get_fnum(:#{name}), do: #{fnum}\n"
+    acc3 = acc3 <> "#{i}def get_ftype(#{fnum}), do: :#{ftype}\n"
+    acc4 = acc4 <> "#{i}def get_type(#{fnum}), do: #{type}\n"
+    { acc1, acc2, acc3, acc4 }
   end
 
   defp indent(level), do: String.duplicate("  ", level)

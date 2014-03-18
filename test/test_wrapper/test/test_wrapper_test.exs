@@ -140,7 +140,7 @@ defmodule TestWrapperTest do
     assert payload == << 10, 3, 8, 150, 1 >>
   end
 
-  test "decode imported message" do
+  test "decode nested imported message" do
     payload = << 10, 3, 8, 150, 1>>
     message = Test.Test12.decode payload
     assert message[:m][:b] == 150
