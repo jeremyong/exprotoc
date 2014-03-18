@@ -1,0 +1,3 @@
+message NoPackage {
+  required uint32 a = 1;
+}

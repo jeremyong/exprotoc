@@ -3,7 +3,7 @@ defmodule Exprotoc.AST do
 
   @moduledoc "Generates a structured AST from the AST produced by the parser."
 
-  def generate_ast({ :nopackage, imports, { enums, messages } }, proto_path) do
+  def generate_ast({ :no_package, imports, { enums, messages } }, proto_path) do
     ast = generate_symbols enums, messages, HashDict.new
     full_ast = generate_import_ast imports, proto_path, ast
     { ast, full_ast }

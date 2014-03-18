@@ -145,4 +145,13 @@ defmodule TestWrapperTest do
     message = Test.Test12.decode payload
     assert message[:m][:b] == 150
   end
+
+  test "missing package header" do
+    message = NoPackage.new a: 150
+    assert message[:a] == 150
+    payload = message |> NoPackage.encode |> iolist_to_binary
+    assert payload == << 8, 150, 1 >>
+    message = NoPackage.decode payload
+    assert message[:a] == 150
+  end
 end
