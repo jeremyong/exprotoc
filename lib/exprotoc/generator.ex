@@ -105,10 +105,9 @@ defmodule Exprotoc.Generator do
 #{i}  def new, do: T.new
 #{i}  def new(enum) do
 #{i}    m = T.new
-#{i}    m = Enum.reduce enum, m, fn({k, v}, acc) ->
-#{i}          put acc, k, v
-#{i}        end
-#{i}    m
+#{i}    Enum.reduce enum, m, fn({k, v}, acc) ->
+#{i}      put acc, k, v
+#{i}    end
 #{i}  end
 #{i}  def get(msg, key) do
 #{i}    f_num = get_fnum key
@@ -139,9 +138,9 @@ defmodule Exprotoc.Generator do
 #{i}    m = HashDict.delete m, f_num
 #{i}    msg.message m
 #{i}  end
-#{i}
+
 #{fields_text}#{submodule_text}#{i}end
-#{i}
+
 #{i}defimpl Access, for: #{name}.T do
 #{i}  def access(msg, key), do: #{name}.get(msg, key)
 #{i}end
