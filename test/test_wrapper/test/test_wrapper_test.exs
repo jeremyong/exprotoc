@@ -174,4 +174,11 @@ defmodule TestWrapperTest do
     assert message[:n] == 150
     assert message[:o] == 300
   end
+
+  test "copy existing message" do
+    message = Test.Test13.new n: 100
+    copy = Test.Test13.new message, o: 200
+    assert copy[:n] == 100
+    assert copy[:o] == 200
+  end
 end

@@ -104,8 +104,10 @@ defmodule Exprotoc.Generator do
 
 #{i}  def new, do: T.new
 #{i}  def new(enum) do
-#{i}    m = T.new
-#{i}    Enum.reduce enum, m, fn({k, v}, acc) ->
+#{i}    new T.new, enum
+#{i}  end
+#{i}  def new(msg, enum) do
+#{i}    Enum.reduce enum, msg, fn({k, v}, acc) ->
 #{i}      put acc, k, v
 #{i}    end
 #{i}  end
