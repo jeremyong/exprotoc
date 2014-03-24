@@ -1,14 +1,14 @@
 defmodule Exprotoc.Generator do
   @moduledoc "Given a structured AST, generate code files into an output dir."
 
-  def generate_code({ ast, full_ast }, dir) do
+  def generate_code({ ast, full_ast }, dir, namespace) do
     File.mkdir_p dir
-    generate_modules { [], full_ast }, [], HashDict.to_list(ast), dir
+    generate_modules { [], full_ast }, [], HashDict.to_list(ast), dir, namespace
   end
-  def generate_code({ package, ast, full_ast}, dir) do
+  def generate_code({ package, ast, full_ast}, dir, namespace) do
     dir = create_package_dir package, dir
     { [], ast } = ast[package]
-    generate_modules { [], full_ast }, [package], HashDict.to_list(ast), dir
+    generate_modules { [], full_ast }, [package], HashDict.to_list(ast), dir, namespace
   end
 
   defp create_package_dir(package, dir) do
@@ -18,20 +18,20 @@ defmodule Exprotoc.Generator do
     dir
   end
 
-  defp generate_modules(_, _, [], _) do end
-  defp generate_modules(ast, scope, [module|modules], dir) do
+  defp generate_modules(_, _, [], _, _) do end
+  defp generate_modules(ast, scope, [module|modules], dir, namespace) do
     { name, _ } = module
     new_scope = [ name | scope ]
     module_filename = name |> atom_to_binary |> to_module_filename
     path = Path.join dir, module_filename
     IO.puts "Generating #{module_filename}"
-    module_text = generate_module ast, new_scope, module, 0, false
+    module_text = generate_module ast, new_scope, module, 0, false, namespace
     File.write path, module_text
-    generate_modules ast, scope, modules, dir
+    generate_modules ast, scope, modules, dir, namespace
   end
 
-  defp generate_module(_, scope, { _, { :enum, enum_values } }, level, sub) do
-    fullname = scope |> Enum.reverse |> get_module_name
+  defp generate_module(_, scope, { _, { :enum, enum_values } }, level, sub, namespace) do
+    fullname = scope |> Enum.reverse |> get_module_name(namespace)
     if sub do
       [name|_] = scope
       name = atom_to_binary name
@@ -58,20 +58,20 @@ defmodule Exprotoc.Generator do
 #{enum_funs}#{i}end
 """
   end
-  defp generate_module(ast, scope, module, level, sub) do
+  defp generate_module(ast, scope, module, level, sub, namespace) do
     if sub do
       [name|_] = scope
       name = atom_to_binary name
     else
-      name = scope |> Enum.reverse |> get_module_name
+      name = scope |> Enum.reverse |> get_module_name(namespace)
     end
     i = indent level
-    fields_text = process_fields ast, scope, module, level
+    fields_text = process_fields ast, scope, module, level, namespace
     submodules = module |> elem(1) |> elem(1) |> HashDict.to_list
     submodule_text = List.foldl submodules, "",
                           fn(m = { n, _ }, acc) ->
                               acc <> generate_module(ast, [n|scope],
-                                                     m, level + 1, true)
+                                                     m, level + 1, true, namespace)
                           end
 
     """
@@ -149,19 +149,30 @@ defmodule Exprotoc.Generator do
 """
   end
 
+  def get_module_name(names, namespace) do
+    prepend_namespace(names, namespace) |> get_module_name
+  end
+
   def get_module_name(names) do
     Enum.join names, "."
   end
 
-  defp process_fields(ast, scope, { _, { fields, _ } }, level) do
-    process_fields ast, scope, fields, level
+  def prepend_namespace(names, nil) do
+    names
   end
-  defp process_fields(ast, scope, fields, level) do
+  def prepend_namespace(names, namespace) do
+    [namespace|names]
+  end
+
+  defp process_fields(ast, scope, { _, { fields, _ } }, level, namespace) do
+    process_fields ast, scope, fields, level, namespace
+  end
+  defp process_fields(ast, scope, fields, level, namespace) do
     i = indent level + 1
     acc = { "", "", "", "", "", [] }
     { acc1, acc2, acc3, acc4, acc5, acc6 } =
       List.foldl fields, acc,
-           &process_field(ast, scope, &1, &2, i)
+           &process_field(ast, scope, &1, &2, i, namespace)
     acc5 = acc5 <> "#{i}def get_default(_), do: nil\n"
     key_string = generate_keystring acc6, i
     acc1 <> acc2 <> acc3 <> acc4 <> acc5 <> key_string
@@ -176,8 +187,8 @@ defmodule Exprotoc.Generator do
   end
 
   defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts },
-                     { acc1, acc2, acc3, acc4, acc5, acc6 } , i) do
-    type = type_to_string ast, scope, type
+                     { acc1, acc2, acc3, acc4, acc5, acc6 } , i, namespace) do
+    type = type_to_string ast, scope, type, namespace
     if ftype == :repeated do
       acc1 = acc1 <> """
 #{i}defp put_key(msg, #{fnum}, values) when is_list(values) do
@@ -202,17 +213,17 @@ defmodule Exprotoc.Generator do
 
   defp indent(level), do: String.duplicate("  ", level)
 
-  defp type_to_string(ast, scope, type) when is_list(type) do
+  defp type_to_string(ast, scope, type, namespace) when is_list(type) do
     { module, pointer } = Exprotoc.AST.search_ast ast, scope, type
     if elem(module, 0) == :enum do
-      "{ :enum, " <> get_module_name(pointer) <> " }"
+      "{ :enum, " <> get_module_name(pointer, namespace) <> " }"
     else
-      "{ :message, " <> get_module_name(pointer) <> " }"
+      "{ :message, " <> get_module_name(pointer, namespace) <> " }"
     end
   end
-  defp type_to_string(ast, scope, type) do
+  defp type_to_string(ast, scope, type, namespace) do
     if Exprotoc.Protocol.wire_type(type) == :custom do
-      type_to_string ast, scope, [type]
+      type_to_string ast, scope, [type], namespace
     else
       ":" <> atom_to_binary(type)
     end
