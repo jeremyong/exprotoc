@@ -1,8 +1,5 @@
 defmodule Exprotoc.Generator do
   @moduledoc "Given a structured AST, generate code files into an output dir."
-  
-  # prefix for module names in generated code files
-  @namespace_prefix "Proto"
 
   def generate_code({ ast, full_ast }, dir, namespace) do
     File.mkdir_p dir
