@@ -150,7 +150,11 @@ defmodule Exprotoc.Generator do
   end
 
   def get_module_name(names, namespace) do
-    prepend_namespace(names, namespace) |> Enum.join "."
+    prepend_namespace(names, namespace) |> get_module_name
+  end
+
+  def get_module_name(names) do
+    Enum.join names, "."
   end
 
   def prepend_namespace(names, nil) do
