@@ -235,8 +235,8 @@ defmodule Exprotoc.Generator do
   end
 
   defp to_enum_type(name) do
-    name = atom_to_binary name
-    name = Regex.replace ~r/([A-Z])/, name, "_\\1"
-    name |> String.lstrip(?_) |> String.downcase
+    name
+      |> atom_to_binary
+      |> String.downcase
   end
 end
