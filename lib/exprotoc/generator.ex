@@ -55,6 +55,8 @@ defmodule Exprotoc.Generator do
     """
 #{i}defmodule #{name} do
 #{i}  def decode(value), do: to_symbol value
+#{i}  def to_a({ #{fullname}, atom }), do: atom
+#{i}  def from_a( atom ), do: { #{fullname}, atom }
 #{enum_funs}#{i}end
 """
   end
@@ -235,8 +237,8 @@ defmodule Exprotoc.Generator do
   end
 
   defp to_enum_type(name) do
-    name = atom_to_binary name
-    name = Regex.replace ~r/([A-Z])/, name, "_\\1"
-    name |> String.lstrip(?_) |> String.downcase
+    name
+      |> atom_to_binary
+      |> String.downcase
   end
 end

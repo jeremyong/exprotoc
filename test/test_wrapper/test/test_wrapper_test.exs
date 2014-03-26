@@ -30,6 +30,7 @@ defmodule TestWrapperTest do
     payload = << 8, 150, 1>>
     message = Proto.Test.Test2.decode payload
     assert message[:b] == { Proto.Test.Test2.Foo, :bar }
+    assert Proto.Test.Test2.Foo.to_a(message[:b]) == :bar
   end
 
   test "encode nested message" do
