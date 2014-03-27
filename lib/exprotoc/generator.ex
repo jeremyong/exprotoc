@@ -56,6 +56,7 @@ defmodule Exprotoc.Generator do
 #{i}defmodule #{name} do
 #{i}  def decode(value), do: to_symbol value
 #{i}  def to_a({ #{fullname}, atom }), do: atom
+#{i}  def from_a( atom ), do: { #{fullname}, atom }
 #{enum_funs}#{i}end
 """
   end
