@@ -24,7 +24,6 @@ defmodule Exprotoc.Generator do
     new_scope = [ name | scope ]
     module_filename = name |> atom_to_binary |> to_module_filename
     path = Path.join dir, module_filename
-    IO.puts "Generating #{module_filename}"
     module_text = generate_module ast, new_scope, module, 0, false, namespace
     File.write path, module_text
     generate_modules ast, scope, modules, dir, namespace
@@ -39,6 +38,7 @@ defmodule Exprotoc.Generator do
       name = fullname
     end
     i = indent level
+    first_field = Enum.at(enum_values, 0) |> elem(1)
     { acc1, acc2, acc3 } =
       List.foldl enum_values, { "", "", "" },
            fn({k, v}, { a1, a2, a3 }) ->
@@ -55,6 +55,7 @@ defmodule Exprotoc.Generator do
     """
 #{i}defmodule #{name} do
 #{i}  def decode(value), do: to_symbol value
+#{i}  def first(), do: to_symbol #{first_field}
 #{i}  def to_a({ #{fullname}, atom }), do: atom
 #{i}  def from_a( atom ), do: { #{fullname}, atom }
 #{enum_funs}#{i}end
@@ -188,9 +189,10 @@ defmodule Exprotoc.Generator do
 """
   end
 
-  defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts },
+  defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts } = arg,
                      { acc1, acc2, acc3, acc4, acc5, acc6 } , i, namespace) do
-    type = type_to_string ast, scope, type, namespace
+    type_term = type_to_term ast, scope, type, namespace
+    type = type_term_to_string type_term
     if ftype == :repeated do
       acc1 = acc1 <> """
 #{i}defp put_key(msg, #{fnum}, values) when is_list(values) do
@@ -207,27 +209,63 @@ defmodule Exprotoc.Generator do
     acc2 = acc2 <> "#{i}def get_fnum(:#{name}), do: #{fnum}\n"
     acc3 = acc3 <> "#{i}def get_ftype(#{fnum}), do: :#{ftype}\n"
     acc4 = acc4 <> "#{i}def get_type(#{fnum}), do: #{type}\n"
-    if opts[:default] != nil do
-      acc5 = acc5 <> "#{i}def get_default(#{fnum}), do: #{opts[:default]}\n"
-    end
+    acc5 = acc5 <> generate_default_value(i, fnum, type_term, opts)
     { acc1, acc2, acc3, acc4, acc5, [ name | acc6 ] }
   end
 
-  defp indent(level), do: String.duplicate("  ", level)
-
-  defp type_to_string(ast, scope, type, namespace) when is_list(type) do
-    { module, pointer } = Exprotoc.AST.search_ast ast, scope, type
-    if elem(module, 0) == :enum do
-      "{ :enum, " <> get_module_name(pointer, namespace) <> " }"
+  defp generate_default_value(i, fnum, type, opts) do
+    default = do_generate_default_value type, opts
+    if default != nil do
+      "#{i}def get_default(#{fnum}), do: #{default}\n"
     else
-      "{ :message, " <> get_module_name(pointer, namespace) <> " }"
+      ""
     end
   end
-  defp type_to_string(ast, scope, type, namespace) do
-    if Exprotoc.Protocol.wire_type(type) == :custom do
-      type_to_string ast, scope, [type], namespace
+
+  defp do_generate_default_value(:bool, opts) do
+    value = opts[:default]
+    if value == nil do
+      value = false
+    end
+    value
+  end
+  defp do_generate_default_value({:enum, name}, opts) do
+    value = if opts[:default] != nil do
+                opts[:default] |> to_enum_type
+              else
+                "first"
+              end
+    Kernel.inspect(name) <> "." <> value
+  end
+  defp do_generate_default_value(_type, opts) do
+    opts[:default]
+  end
+  # TODO
+  # add defaults for other types
+  # numbers = 0
+  # string = ""
+
+  defp indent(level), do: String.duplicate("  ", level)
+
+  defp type_term_to_string(term) do
+      Kernel.inspect term
+  end
+
+  defp type_to_term(ast, scope, type, namespace) when is_list(type) do
+    { module, pointer } = Exprotoc.AST.search_ast ast, scope, type
+    modulename = "Elixir." <> get_module_name(pointer, namespace)
+             |> binary_to_atom
+    if elem(module, 0) == :enum do
+      { :enum, modulename }
     else
-      ":" <> atom_to_binary(type)
+      { :message, modulename }
+    end
+  end
+  defp type_to_term(ast, scope, type, namespace) do
+    if Exprotoc.Protocol.wire_type(type) == :custom do
+      type_to_term ast, scope, [type], namespace
+    else
+      type
     end
   end
 
