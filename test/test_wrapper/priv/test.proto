@@ -10,8 +10,9 @@ message Test1 {
 message Test2 {
   enum Foo {
     Bar = 150;
+    Baz = 160;
   }
-  required Foo b = 1;
+  required Foo b = 1 [default = Baz];
 }
 
 message Test3 {
