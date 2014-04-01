@@ -114,7 +114,10 @@ defmodule Exprotoc.Generator do
 #{i}      put acc, k, v
 #{i}    end
 #{i}  end
-#{i}  def get(msg, key) do
+#{i}  def get(msg, keys) when is_list(keys) do
+#{i}    Enum.map keys, &( get(msg, &1) )
+#{i}  end
+#{i}  def get(msg, key) when is_atom(key) do
 #{i}    f_num = get_fnum key
 #{i}    m = msg.message
 #{i}    if HashDict.has_key?(m, f_num) do
