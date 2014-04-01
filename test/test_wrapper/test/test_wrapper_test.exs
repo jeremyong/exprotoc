@@ -182,4 +182,9 @@ defmodule TestWrapperTest do
     assert copy[:n] == 100
     assert copy[:o] == 200
   end
+
+  test "multi get" do
+    m = Proto.Test.Test13.new n: 100, o: 200
+    assert [200, 100] == Proto.Test.Test13.get(m, [:o, :n])
+  end
 end
