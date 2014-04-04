@@ -149,6 +149,10 @@ defmodule Exprotoc.Generator do
 
 #{fields_text}#{submodule_text}#{i}end
 
+#{i}defimpl Inspect, for: #{name}.T do
+#{i}  def inspect(msg, opts), do: Exprotoc.Inspect.inspect(#{name}, msg, opts)
+#{i}end
+
 #{i}defimpl Access, for: #{name}.T do
 #{i}  def access(msg, key), do: #{name}.get(msg, key)
 #{i}end
@@ -175,13 +179,13 @@ defmodule Exprotoc.Generator do
   end
   defp process_fields(ast, scope, fields, level, namespace) do
     i = indent level + 1
-    acc = { "", "", "", "", "", [] }
-    { acc1, acc2, acc3, acc4, acc5, acc6 } =
+    acc = { "", "", "", "", "", [] , ""}
+    { acc1, acc2, acc3, acc4, acc5, acc6, acc7 } =
       List.foldl fields, acc,
            &process_field(ast, scope, &1, &2, i, namespace)
     acc5 = acc5 <> "#{i}def get_default(_), do: nil\n"
     key_string = generate_keystring acc6, i
-    acc1 <> acc2 <> acc3 <> acc4 <> acc5 <> key_string
+    acc1 <> acc2 <> acc7 <>  acc3 <> acc4 <> acc5 <> key_string
   end
 
   defp generate_keystring(keys, i) do
@@ -193,7 +197,7 @@ defmodule Exprotoc.Generator do
   end
 
   defp process_field(ast, scope, { :field, ftype, type, name, fnum, opts } = arg,
-                     { acc1, acc2, acc3, acc4, acc5, acc6 } , i, namespace) do
+                     { acc1, acc2, acc3, acc4, acc5, acc6, acc7 } , i, namespace) do
     type_term = type_to_term ast, scope, type, namespace
     type = type_term_to_string type_term
     if ftype == :repeated do
@@ -213,7 +217,8 @@ defmodule Exprotoc.Generator do
     acc3 = acc3 <> "#{i}def get_ftype(#{fnum}), do: :#{ftype}\n"
     acc4 = acc4 <> "#{i}def get_type(#{fnum}), do: #{type}\n"
     acc5 = acc5 <> generate_default_value(i, fnum, type_term, opts)
-    { acc1, acc2, acc3, acc4, acc5, [ name | acc6 ] }
+    acc7 = acc7 <> "#{i}def get_fname(#{fnum}), do: :#{name}\n"
+    { acc1, acc2, acc3, acc4, acc5, [ name | acc6 ], acc7}
   end
 
   defp generate_default_value(i, fnum, type, opts) do
