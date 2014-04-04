@@ -13,7 +13,7 @@ defmodule Exprotoc.Parser do
     { :ok, tokens, _ } = :erl_scan.string(list_text, 1,
                                           { :reserved_word_fun ,
                                             &reserved_words/1 })
-    tokens
+    {file, tokens}
   end
 
   def find_file(file, []) do
@@ -32,9 +32,13 @@ defmodule Exprotoc.Parser do
     end
   end
 
-  def parse(tokens) do
-    { :ok, ast } = :proto_grammar.parse tokens
-    ast
+  def parse({file, tokens}) do
+    case :proto_grammar.parse tokens do
+      { :ok, ast } ->
+        ast
+      error ->
+        raise "parse error in #{file}: #{inspect(error)}"
+    end
   end
 
   defp reserved_words(:package), do: true
