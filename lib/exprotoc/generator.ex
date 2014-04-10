@@ -179,7 +179,12 @@ defmodule Exprotoc.Generator do
   end
   defp process_fields(ast, scope, fields, level, namespace) do
     i = indent level + 1
-    acc = { "", "", "", "", "", [] , ""}
+    ftype_acc = """
+#{i}def get_ftype(-1), do: :required
+#{i}def get_ftype(-2), do: :repeated
+#{i}def get_ftype(-3), do: :optional
+"""
+    acc = { "", "", ftype_acc, "", "", [] , ""}
     { acc1, acc2, acc3, acc4, acc5, acc6, acc7 } =
       List.foldl fields, acc,
            &process_field(ast, scope, &1, &2, i, namespace)
