@@ -187,4 +187,15 @@ defmodule TestWrapperTest do
     m = Proto.Test.Test13.new n: 100, o: 200
     assert [200, 100] == Proto.Test.Test13.get(m, [:o, :n])
   end
+  
+  test "encode float" do
+    t = Proto.Test.Test14.new num: 1.0
+    p = t |> Proto.Test.Test14.encode |> iolist_to_binary
+    assert p == <<13, 0, 0, 128, 63>>
+  end
+
+  test "decode float" do
+    t = Proto.Test.Test14.decode <<13, 0, 0, 128, 63>>
+    assert t[:num] == 1.0
+  end
 end
