@@ -75,9 +75,9 @@ defmodule Exprotoc.Protocol do
     { (data <<< pad) + acc, rest }
   end
 
-  defp pop_64bits(<< value :: 64, rest :: binary >>), do: { value, rest }
+  defp pop_64bits(<< value :: [64, unit(1), binary], rest :: binary >>), do: { value, rest }
 
-  defp pop_32bits(<< value :: 32, rest :: binary >>), do: { value, rest }
+  defp pop_32bits(<< value :: [32, unit(1), binary], rest :: binary >>), do: { value, rest }
 
   defp pop_string(message) do
     { len, message } = pop_varint message
