@@ -58,3 +58,7 @@ message Test13 {
   optional uint32 n = 1 [default = 150];
   optional uint32 o = 2 [default = 300];
 }
+
+message Test14 {
+  required float num = 1;
+}

@@ -181,4 +181,15 @@ defmodule TestWrapperTest do
     assert copy[:n] == 100
     assert copy[:o] == 200
   end
+  
+  test "encode float" do
+    t = Test.Test14.new num: 1.0
+    p = t |> Test.Test14.encode |> iolist_to_binary
+    assert p == <<13, 0, 0, 128, 63>>
+  end
+
+  test "decode float" do
+    t = Test.Test14.decode <<13, 0, 0, 128, 63>>
+    assert t[:num] == 1.0
+  end
 end
