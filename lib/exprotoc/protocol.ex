@@ -133,7 +133,7 @@ defmodule Exprotoc.Protocol do
     len = byte_size data
     [ encode_varint(len), data ]
   end
-  defp encode_value(:foat, data) do
+  defp encode_value(:float, data) do
     << data :: [ size(32), float, little ] >>
   end
 
