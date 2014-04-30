@@ -60,7 +60,7 @@ Just access your message modules as you would a standard Elixir dict.
 For example, with the following proto message:
 
 ```proto
-package Example
+package Example;
 message Foo {
   enum Bar {
     Zap = 150;
