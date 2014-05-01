@@ -207,6 +207,9 @@ defmodule Exprotoc.Generator do
     type = type_term_to_string type_term
     if ftype == :repeated do
       acc1 = acc1 <> """
+#{i}defp put_key(msg, #{fnum}, []) do
+#{i}  msg
+#{i}end
 #{i}defp put_key(msg, #{fnum}, values) when is_list(values) do
 #{i}  HashDict.put msg, #{fnum}, { :repeated, values }
 #{i}end
