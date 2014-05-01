@@ -4,14 +4,16 @@ defmodule Exprotoc.Mixfile do
   def project do
     [ app: :exprotoc,
       version: "0.0.1",
-      elixir: "~> 0.12.5",
+      elixir: ">= 0.12.5",
       compilers: [ :yecc, :erlang, :elixir, :app ],
       deps: deps ]
   end
 
   # Configuration for the OTP application
   def application do
-    []
+    [
+     env: [prefix: "Proto"]
+    ]
   end
 
   # Returns the list of dependencies in the format:
